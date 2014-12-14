@@ -1,7 +1,7 @@
 photos
 ======
 
-Lists the images within a list of directories, along with the image creation date (if available) from the exif data.
+Given a list of directories, lists the image files found below those directories, along with the image creation date (if available) from the file [Exif](http://en.wikipedia.org/wiki/Exchangeable_image_file_format) data.
 
 
 build/run
