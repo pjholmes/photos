@@ -60,8 +60,18 @@ object Photos {
         println(s"Exception: $file $ex")
         FileVisitResult.CONTINUE
       }
+      override def preVisitDirectory(dir: Path, attr: BasicFileAttributes) : FileVisitResult = {
+        if (shouldSkipDir(dir.toString))
+          FileVisitResult.SKIP_SUBTREE
+        else
+          FileVisitResult.CONTINUE
+      }
     }
     Files.walkFileTree(Paths.get(dir), new Visitor)
     files
+  }
+
+  def shouldSkipDir(dir: String) : Boolean = {
+    dir.endsWith(".photolibrary")
   }
 }
