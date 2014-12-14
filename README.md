@@ -3,6 +3,7 @@ photos
 
 Given a list of directories, lists the image files found below those directories, along with the image creation date (if available) from the file [Exif](http://en.wikipedia.org/wiki/Exchangeable_image_file_format) data.
 
+I have plans to do much more, including renaming files based on the date, creating a y/m/d directory structure, finding duplicates, etc.
 
 build/run
 =====
