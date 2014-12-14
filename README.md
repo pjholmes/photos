@@ -4,7 +4,7 @@ photos
 Lists the images within a list of directories, along with the image creation date (if available) from the exif data.
 
 
-Build
+build/run
 =====
 
     $ sbt
