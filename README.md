@@ -15,3 +15,8 @@ build/run
     /Usses/pjholmes/photos/DSC_0044.JPG: <no date>
     ...
     [run-main-0] INFO Photos - Processed 13224 files
+    
+credit
+======
+
+Thanks to [Drew Noakes](https://drewnoakes.com/code/exif/) for the [metadata extractor](https://github.com/drewnoakes/metadata-extractor)
