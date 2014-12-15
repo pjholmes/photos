@@ -28,12 +28,12 @@ object Photo {
   val reg = """.*(\d\d\d\d)[-_](\d\d)[-_](\d\d)[-_ ](\d\d)[-_.](\d\d)[-_.](\d\d).*""".r
 }
 
-class Photo (val origName: String, val origSize: Long, val origCreateDate: Date) {
+class Photo (val fileName: String, val size: Long, val createDate: Date) {
 
-  lazy val exifDate : Option[Date] = ImageExif.getImageDate(origName)
+  lazy val exifDate : Option[Date] = ImageExif.getImageDate(fileName)
 
-  lazy val origDigest : String = {
-    val content = Files.readAllBytes(Paths.get(origName))
+  lazy val digest : String = {
+    val content = Files.readAllBytes(Paths.get(fileName))
     MessageDigest.getInstance("MD5").digest(content).map("%02x".format(_)).mkString
   }
 
@@ -46,19 +46,19 @@ class Photo (val origName: String, val origSize: Long, val origCreateDate: Date)
     if (exifDate.isDefined) {
       exifDate.get
     } else {
-      val name = new File(origName).getName
+      val name = new File(fileName).getName // without path
       name match {
         case Photo.reg(y, m, d, h, mm, s) =>
           val dt = new Date(y.toInt - 1900, m.toInt - 1, d.toInt, h.toInt, mm.toInt, s.toInt)
           dt
         case _ =>
-          origCreateDate
+          createDate
       }
     }
   }
 
   lazy val targetName : String = {
-    Photo.format.format(targetDate) + origName.substring(origName.lastIndexOf('.')).toLowerCase;
+    Photo.format.format(targetDate) + fileName.substring(fileName.lastIndexOf('.')).toLowerCase;
   }
 
   override def toString() = {
@@ -66,7 +66,7 @@ class Photo (val origName: String, val origSize: Long, val origCreateDate: Date)
       case Some(v) => v.toString
       case None => "None"
     }
-    s"$origName origSize: $origSize  origDate: $dateStr targetName: $targetName" // origDigest: $origDigest"
+    s"$fileName origSize: $size  origDate: $dateStr targetName: $targetName digest: $digest"
   }
 }
 
