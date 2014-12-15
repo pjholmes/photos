@@ -19,9 +19,8 @@ package com.github.pjholmes.photos
 import java.io.IOException
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file._
-
+import java.util.Date
 import grizzled.slf4j.Logger
-
 import scala.collection.mutable.ArrayBuffer
 
 object ImageScanner {
@@ -29,17 +28,17 @@ object ImageScanner {
 
   val exts = List(".jpg", ".png", ".bmp")
 
-  def isImageFile(fileName: String) = ImageScanner.exts.contains(fileName.takeRight(4).toLowerCase)
+  def isImageFile(fileName: String) = exts.contains(fileName.takeRight(4).toLowerCase)
 
   def shouldSkipDir(dir: String) = dir.endsWith(".photolibrary")
 
   def getImageFilesBelowPath(path: String) = {
-    val files = ArrayBuffer.empty[String]
+    val files = ArrayBuffer.empty[Photo]
     class Visitor extends SimpleFileVisitor[Path]
     {
       override def visitFile(file: Path, attr: BasicFileAttributes) : FileVisitResult = {
         if (attr.isRegularFile && isImageFile(file.toString))
-          files += file.toString
+          files += new Photo(file.toString, attr.size(), new Date(attr.creationTime().toMillis))
         FileVisitResult.CONTINUE
       }
       override def visitFileFailed(file: Path, ex: IOException) : FileVisitResult = {
@@ -50,7 +49,7 @@ object ImageScanner {
         if (shouldSkipDir(dir.toString))
           FileVisitResult.SKIP_SUBTREE
         else {
-          logger.debug(s"Entering: $dir")
+          logger.info(s"Entering: $dir")
           FileVisitResult.CONTINUE
         }
       }

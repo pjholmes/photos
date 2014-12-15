@@ -20,8 +20,12 @@ import java.io.File
 import com.drew.imaging.ImageMetadataReader
 import com.drew.metadata.exif.ExifSubIFDDirectory
 import java.util.Date
+import grizzled.slf4j.Logger
 
 object ImageExif {
+
+  val logger = Logger("ImageExif")
+
   def getImageDate(fileName: String) : Option[Date] = {
     try {
       val file = new File(fileName)
@@ -29,12 +33,12 @@ object ImageExif {
       val directory = metadata.getDirectory(classOf[ExifSubIFDDirectory])
       if (directory ne null) {
         val date = directory.getDate(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL)
-        return Some(date)
+        if (date ne null)
+          return Some(date)
       }
-      None
     } catch {
-      case e: Exception => println(s"$fileName $e")
-        return None
+      case e: Exception => logger.error(s"Exception: $e file: $fileName")
     }
+    None
   }
 }
