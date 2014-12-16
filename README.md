@@ -1,21 +1,29 @@
 photos
 ======
 
-Given a list of directories, lists the image files found below those directories, along with the image creation date (if available) from the file [Exif](http://en.wikipedia.org/wiki/Exchangeable_image_file_format) data.
+This is the start of a program to manage photos, including renaming them, putting them in a directory structure, removing duplicates, etc.
 
-I have plans to do much more, including renaming files based on the date, creating a y/m/d directory structure, finding duplicates, etc.
+For now, given a list of directories, it lists all the sets of duplicate photos. A file is considered a duplicate if the file size and MD5 digest match, regardless of name and location. It currently does not move, copy, or delete any files.
+
+Photo objects also contains the [Exif](http://en.wikipedia.org/wiki/Exchangeable_image_file_format) image creation date, if available, which is used to create the target file name. This name will be used in the future for moving files.
 
 build/run
 =====
 
     $ sbt
     > compile
-    > run "/Users/pjholmes/photos" <dir2> <dir3> ...
-    [run-main-1] INFO Photos - Starting
-    /Users/pjholmes/photos/IMG_20140718_171700.jpg: Fri Jul 18 17:17:00 PDT 2014
-    /Usses/pjholmes/photos/DSC_0044.JPG: <no date>
-    ...
-    [run-main-0] INFO Photos - Processed 13224 files
+    > run "/Users/user/photos" <dir2> <dir3> ...
+    [main] INFO ImageScanner - Scanning ...
+    [main] INFO ImageScanner - Found 3055 files
+    [main] INFO ImageScanner - Finding duplicate photos ...
+    [main] INFO ImageScanner - Found 259 duplicate photos
+
+    /Users/user/photos/Christmas 2005/Christmas 2005 017.jpg
+    /Users/user/photos/My Pictures/APRIL 7 2005 017.jpg
+
+    /Users/user/photos/Eagle Scout/DCP_1052.JPG
+    /Users/user/photos/Jeff's Eagle/DCP_1052.JPG
+
     
 credit
 ======
