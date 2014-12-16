@@ -30,7 +30,7 @@ object ImageScanner {
 
   def isImageFile(fileName: String) = exts.contains(fileName.takeRight(4).toLowerCase)
 
-  def shouldSkipDir(dir: String) = dir.endsWith(".photolibrary")
+  def shouldSkipDir(dir: String) = dir.endsWith(".photolibrary")  // skip iPhoto database
 
   def getImageFilesBelowPath(path: String) = {
     val files = ArrayBuffer.empty[Photo]
@@ -49,7 +49,7 @@ object ImageScanner {
         if (shouldSkipDir(dir.toString))
           FileVisitResult.SKIP_SUBTREE
         else {
-          logger.info(s"Entering: $dir")
+          logger.debug(s"Entering: $dir")
           FileVisitResult.CONTINUE
         }
       }
