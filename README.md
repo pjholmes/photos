@@ -3,7 +3,7 @@ photos
 
 This is the start of a program to manage photos, including renaming them, putting them in a directory structure, removing duplicates, etc.
 
-For now, given a list of directories, it lists all the sets of duplicate photos. A file is considered a duplicate if the file size and MD5 digest match. It currently does not move, copy, or delete any files.
+For now, given a list of directories, it lists all the sets of duplicate photos. A file is considered a duplicate if the file size and MD5 digest match, regardless of name and location. It currently does not move, copy, or delete any files.
 
 Photo objects also contains the [Exif](http://en.wikipedia.org/wiki/Exchangeable_image_file_format) image creation date, if available, which is used to create the target file name. This name will be used in the future for moving files.
 
