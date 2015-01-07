@@ -16,55 +16,105 @@ limitations under the License.
 
 package com.github.pjholmes.photos
 
-import ImageScanner._
+import java.nio.file.{Paths, Files}
 import grizzled.slf4j.Logger
 
-import scala.collection.immutable.Iterable
+class Photos(args: Array[String])  {
+  import Photos._
 
-object Photos {
-  val logger = Logger("Photos")
+  var album = new Album()
 
-  def main(args: Array[String]) {
+  val files = scan(args)
 
-    val photos = new Photos()
-    photos.scan(args)
+  // The source files could have many duplicates WITHIN the source files
+  // (regardless of whether any of the source files duplicate files in the album).
+  // Find all the duplicate files. For each set of duplicates, sort them by descending
+  // date quality score. The tail of the list are all duplicates.
+  //
+  // If one file has exif data and the other does not, their sizes and digests would
+  // not match so they would not be in the same set. However, if one file in the set
+  // has a date in the file name, and another does not, we would prefer
+  // the one with a date (as this is better representative of the capture
+  // datetime).
 
-    val dups = photos.findDups()
-    // print the duplicates in groups separated by linefeed
-    dups.foreach(grp => {
-      println()
-      grp.foreach(p => {
-        println(p.fileName)
+  val dups = findDups()
+
+  val filesToAdd = files.filter(f => !dups.contains(f.fileName))
+
+  logger.info("Importing...")
+
+  filesToAdd.foreach(photo => {
+    if (photo.fileSize > Config.minimumSize) {
+      album.addIfNotDuplicate(photo)
+      if (Config.deleteSource) {
+        try {
+          Files.delete(Paths.get(photo.fileName))
+        } catch {
+          case e: Exception => logger.error(s"Exception: $e deleting file: ${photo.fileName}")
+        }
+        // todo: delete dir if it's empty, recursively
+      }
+    }
+  })
+
+  if (Config.deleteSource) {
+    dups.foreach(dup => {
+      try {
+        Files.delete(Paths.get(dup))
+      } catch {
+        case e: Exception => logger.error(s"Exception: $e deleting file: ${dup}")
+      }
+      // todo: delete dir if it's empty, recursively
+    })
+  }
+
+  logger.info(s"Done - Imported ${album.getFilesAddedCount()} files.")
+
+  def scan(args: Array[String]): Array[Photo] = {
+    val files = args.flatMap(arg => DirectoryScanner.getPhotoFilesBelowPath(arg))
+    logger.info(s"Found ${files.length} photos")
+    files
+  }
+
+  def scan(arg: String): Array[Photo] = {
+    scan(Array(arg))
+  }
+
+  def findDups(): Set[String] = {
+    logger.info("Looking for duplicates files within source files...")
+    // Getting the file digest is expensive. So, find files that have duplicate sizes first.
+    // Then incur the expense of getting the digest for just those files, and regroup by both size and digest.
+    val grpBySize = files.groupBy(_.fileSize)
+    // duplicates are groups with more than one file
+    val grpsWithDups = grpBySize.filter(_._2.length > 1)
+    // flatmap the files back into a single list so we can group them again
+    val allDups = grpsWithDups.flatMap(_._2)
+    // this will materialize the digest for only the dups - slowly
+    val grpBySizeAndDigest = allDups.groupBy(p => (p.fileSize, p.fileDigest))
+    // again, only groups with more than 1 file
+    val sdGrpsWithDups = grpBySizeAndDigest.filter(_._2.size > 1)
+    // create a list of lists of photos, sorted by (descending score, ascending date)
+    val grpsOfDups = sdGrpsWithDups.map(_._2.toList.sorted)
+    // Take the tail of each list,
+    // which represents the files which duplicate the file at the head of the list
+    grpsOfDups.foreach(g => {
+      logger.info(s"File ${g.head.fileName} has the following duplicates:")
+      g.tail.foreach(p => {
+        logger.info(s" ${p.fileName}")
       })
     })
+    // put them all into a single list and select just the file name
+    val allDups2 = grpsOfDups.flatMap(p => p.tail).map(p => p.fileName).toSet
+    logger.info(s"Total duplicate source files: ${allDups2.toArray.size}")
+
+    allDups2
   }
 }
 
-class Photos() {
-  var files : Array[Photo] = _
+object Photos  {
+  val logger = Logger("Photos")
 
-  def scan(args: Array[String]) = {
-    logger.info("Scanning ...")
-    files = args.flatMap(arg => getImageFilesBelowPath(arg))
-    logger.info(s"Found ${files.length} files")
-  }
-
-  def findDups(): Iterable[Iterable[Photo]] = {
-    logger.info("Finding duplicate photos ...")
-    // Getting the file digest is expensive. So, find files that have duplicate sizes first.
-    // Then incur the expense of getting the digest for just those files, and regroup by both size and digest.
-    val grpBySize = files.groupBy(_.size)
-    // duplicates are groups with more than one file
-    val dups = grpBySize.filter(_._2.length > 1)
-    // flatmap the files back into a single list so we can group them again
-    val allDups = dups.flatMap(_._2)
-    // this will materialize the digest for only the dups
-    val grpBySizeAndDigest = allDups.groupBy(p => (p.size, p.digest))
-    // again, only groups with more than 1 file
-    val dups2 = grpBySizeAndDigest.filter(_._2.size > 1)
-    val res = dups2.map(_._2)
-    val total = res.map(_.size).sum
-    logger.info(s"Found ${total - res.size} duplicate photos")
-    res
+  def main(args: Array[String]) {
+    new Photos(args)
   }
 }

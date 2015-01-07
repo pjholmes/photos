@@ -19,22 +19,27 @@ package com.github.pjholmes.photos
 import java.io.File
 import com.drew.imaging.ImageMetadataReader
 import com.drew.metadata.exif.ExifSubIFDDirectory
-import java.util.Date
 import grizzled.slf4j.Logger
+import org.joda.time.LocalDateTime
 
-object ImageExif {
+object PhotoExif {
 
   val logger = Logger("ImageExif")
 
-  def getImageDate(fileName: String) : Option[Date] = {
+  def getPhotoDate(fileName: String) : Option[LocalDateTime] = {
     try {
       val file = new File(fileName)
       val metadata = ImageMetadataReader.readMetadata(file)
       val directory = metadata.getDirectory(classOf[ExifSubIFDDirectory])
       if (directory ne null) {
         val date = directory.getDate(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL)
-        if (date ne null)
-          return Some(date)
+        if (date ne null) {
+          val ldt = new LocalDateTime(date.getTime)
+          if (ldt.getYear < 1990) { //invalid
+            return None
+          }
+          return Some(ldt)
+        }
       }
     } catch {
       case e: Exception => logger.error(s"Exception: $e file: $fileName")

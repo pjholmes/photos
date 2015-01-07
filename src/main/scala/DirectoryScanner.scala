@@ -19,26 +19,29 @@ package com.github.pjholmes.photos
 import java.io.IOException
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file._
-import java.util.Date
 import grizzled.slf4j.Logger
+import org.joda.time.LocalDateTime
 import scala.collection.mutable.ArrayBuffer
 
-object ImageScanner {
-  val logger = Logger("ImageScanner")
+object DirectoryScanner {
+  val logger = Logger("DirectoryScanner")
 
-  val exts = List(".jpg", ".png", ".bmp")
+  def isPhotoFile(fileName: String) = Config.extensions.exists(ext => {
+    fileName.takeRight(ext.length()).toLowerCase == ext
+  })
 
-  def isImageFile(fileName: String) = exts.contains(fileName.takeRight(4).toLowerCase)
+  def shouldSkipDir(dir: String) = Config.skipDirSuffixes.exists(dir.endsWith(_))
 
-  def shouldSkipDir(dir: String) = dir.endsWith(".photolibrary")  // skip iPhoto database
-
-  def getImageFilesBelowPath(path: String) = {
+  def getPhotoFilesBelowPath(path: String) = {
     val files = ArrayBuffer.empty[Photo]
     class Visitor extends SimpleFileVisitor[Path]
     {
       override def visitFile(file: Path, attr: BasicFileAttributes) : FileVisitResult = {
-        if (attr.isRegularFile && isImageFile(file.toString))
-          files += new Photo(file.toString, attr.size(), new Date(attr.creationTime().toMillis))
+        if (attr.isRegularFile && isPhotoFile(file.toString)) {
+          // on my mac (OSX 10.10.1) this returns the last modification time, not create time
+          val fileTime = attr.creationTime()
+          files += new Photo(file.toString, attr.size(), new LocalDateTime(fileTime.toMillis))
+        }
         FileVisitResult.CONTINUE
       }
       override def visitFileFailed(file: Path, ex: IOException) : FileVisitResult = {
@@ -46,14 +49,17 @@ object ImageScanner {
         FileVisitResult.CONTINUE
       }
       override def preVisitDirectory(dir: Path, attr: BasicFileAttributes) : FileVisitResult = {
-        if (shouldSkipDir(dir.toString))
+        if (shouldSkipDir(dir.toString)) {
+          logger.info(s"Skipping directory $dir")
           FileVisitResult.SKIP_SUBTREE
+        }
         else {
           logger.debug(s"Entering: $dir")
           FileVisitResult.CONTINUE
         }
       }
     }
+    logger.info(s"Scanning $path")
     Files.walkFileTree(Paths.get(path), new Visitor)
     files
   }
