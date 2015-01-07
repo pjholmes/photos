@@ -39,7 +39,7 @@ This programs solves the problem for me by doing the following:
 ##Limitations
 1. After deleting source files, some directories may be empty. Ideally, the program would detect this and delete them.
 2. A file is only considered duplicate if it has the exact same size and content as another file (technically the same size and MD5 hash of the file content). The program does not look for images which could be same image with differnt dimensions. Note however, that if a single image was used to create the other images (crop, red eye correction, etc.) and that image has exif data, and the date was retained in the editing process, then all of the photos will have the same base name, varying only by sequence number, and will sort together in a file list.
-3. The porgram was tested on a MAC (10.10.1). It has not beed tested on any other OS.
+3. The program was tested on a MAC (10.10.1). It has not beed tested on any other OS.
 
 build/run
 =====
