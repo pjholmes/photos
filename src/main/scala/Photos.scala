@@ -47,12 +47,7 @@ class Photos(args: Array[String])  {
     if (photo.fileSize > Config.minimumSize) {
       album.addIfNotDuplicate(photo)
       if (Config.deleteSource) {
-        try {
-          Files.delete(Paths.get(photo.fileName))
-        } catch {
-          case e: Exception => logger.error(s"Exception: $e deleting file: ${photo.fileName}")
-        }
-        // todo: delete dir if it's empty, recursively
+        photo.delete()
       }
     }
   })
@@ -64,7 +59,6 @@ class Photos(args: Array[String])  {
       } catch {
         case e: Exception => logger.error(s"Exception: $e deleting file: ${dup}")
       }
-      // todo: delete dir if it's empty, recursively
     })
   }
 

@@ -29,6 +29,7 @@ import org.joda.time.LocalDateTime
  * @param fileCreateDateTime The file creation time
  */
 class Photo (val fileName: String, val fileSize: Long, val fileCreateDateTime: LocalDateTime) extends Ordered[Photo] {
+  import Photo._
 
   lazy val exifDateTime : Option[LocalDateTime] = PhotoExif.getPhotoDate(fileName)
 
@@ -56,12 +57,20 @@ class Photo (val fileName: String, val fileSize: Long, val fileCreateDateTime: L
     } else {
       val name = new File(fileName).getName // without path
       name match {
-        case Photo.dateRegex(y, m, d, h, mm, s) =>
+        case dateRegex(y, m, d, h, mm, s) =>
           val dt = new LocalDateTime(y.toInt, m.toInt, d.toInt, h.toInt, mm.toInt, s.toInt)
           (dt, 2)
         case _ =>
           (fileCreateDateTime, 1)
       }
+    }
+  }
+
+  def delete(): Unit = {
+    try {
+      Files.delete(Paths.get(fileName))
+    } catch {
+      case e: Exception => logger.error(s"Exception: $e deleting file: ${fileName}")
     }
   }
 
