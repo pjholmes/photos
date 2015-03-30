@@ -44,11 +44,13 @@ class Photos(args: Array[String])  {
   logger.info("Importing...")
 
   filesToAdd.foreach(photo => {
-    if (photo.fileSize > Config.minimumSize) {
-      album.addIfNotDuplicate(photo)
-      if (Config.deleteSource) {
-        photo.delete()
-      }
+    try {
+        album.addIfNotDuplicate(photo)
+        if (Config.deleteSource) {
+          photo.delete()
+        }
+    } catch {
+      case e: Exception => logger.error(s"Exception: $e adding file: ${photo}")
     }
   })
 
@@ -66,12 +68,9 @@ class Photos(args: Array[String])  {
 
   def scan(args: Array[String]): Array[Photo] = {
     val files = args.flatMap(arg => DirectoryScanner.getPhotoFilesBelowPath(arg))
+                    .filter(p => p.fileSize > Config.minimumSize)
     logger.info(s"Found ${files.length} photos")
     files
-  }
-
-  def scan(arg: String): Array[Photo] = {
-    scan(Array(arg))
   }
 
   def findDups(): Set[String] = {

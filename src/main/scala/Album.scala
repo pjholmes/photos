@@ -66,7 +66,7 @@ class Album {
       destPath = Paths.get(destDir.toString, targetName(photo, seq))
     }
 
-    logger.info(s"Copying to $destPath")
+    logger.info(s"Copying from ${photo.fileName} to ${destPath}")
 
     try {
       Files.copy(Paths.get(photo.fileName), destPath, StandardCopyOption.COPY_ATTRIBUTES)
@@ -105,7 +105,7 @@ class Album {
       // avoid computing the file digest if there are no files with the same size
       grpBySize.getOrElse(photo.fileSize, new ArrayBuffer[Photo]()).foreach(file => {
         if (file.fileDigest == photo.fileDigest) {
-          logger.info(s"File ${photo.fileName} appears to be a duplicate of file ${file.fileName}")
+          //logger.info(s"File ${photo.fileName} appears to be a duplicate of file ${file.fileName}")
           return true
         }
       })
